@@ -27,19 +27,18 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.BitmapFactory
 
-
-
-
-
 class MainActivity : AppCompatActivity() {
 
     companion object {
         val START_TO_PLAY_MUSIC = 11
+        val CURRENT_SONG = "current_song"
+        val IS_PLAYING_SONG = "is_playing_song"
+        lateinit var localMusics: MutableList<BaseData>
+
     }
 
     var currentPosition: Int = 0
     val context = this
-    lateinit var localMusics: MutableList<BaseData>
     lateinit var songRecyclerView: RecyclerView
     val songAdapter: LocalTypeAdapter = LocalTypeAdapter()
     lateinit var mPlayBinder: MusicBaseService.MusicBaseBinder
@@ -73,16 +72,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun initView() {
-        initAlbumImage()
+        updatePlayGroup()
         initViewPager()
-    }
-
-    fun initAlbumImage() {
-        val albumArt: String = MusicUtils.getAlbumArt(currentSong.albumId, this)
-        var bitmap: Bitmap? = null
-        bitmap = BitmapFactory.decodeFile(albumArt)
-        val bmpDraw = BitmapDrawable(bitmap)
-        albumIv.setImageDrawable(bmpDraw)
     }
 
     fun initViewPager() {
@@ -92,7 +83,13 @@ class MainActivity : AppCompatActivity() {
         songAdapter.dataList = localMusics
         songAdapter.songItemClickListener = object : LocalTypeAdapter.SongItemClickListener {
             override fun onItemClick(song: Song) {
-                startActivity(Intent(this@MainActivity, MusicPlayerActivity::class.java).putExtra("filePath", song))
+                var isPlayingSong: Boolean = false
+                if(song == currentSong) {
+                    isPlayingSong = true
+                }
+                startActivityForResult(
+                    Intent(this@MainActivity, MusicPlayerActivity::class.java).putExtra("filePath", song).putExtra(IS_PLAYING_SONG, isPlayingSong)
+                    , START_TO_PLAY_MUSIC)
             }
         }
         songRecyclerView.adapter = songAdapter
@@ -107,7 +104,7 @@ class MainActivity : AppCompatActivity() {
 
     fun prepareMusic() {
         if(localMusics.size >= 0) {
-            mPlayBinder.setDataSource(currentSong.path)
+            mPlayBinder.prepareSource(currentSong.path)
         }
     }
 
@@ -123,28 +120,64 @@ class MainActivity : AppCompatActivity() {
         playBt.setOnClickListener {
             playOrPauseMusic()
         }
+        nextSongIv.setOnClickListener {
+            currentSongIndex = localMusics.indexOf(currentSong)
+            currentSongIndex = (currentSongIndex + 1) % localMusics.size
+            currentSong = localMusics[currentSongIndex] as Song
+            mPlayBinder.prepareSource(currentSong.path)
+            mPlayBinder.playOrPauseMusic()
+            updatePlayGroup()
+            updatePlayIv()
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if(requestCode == START_TO_PLAY_MUSIC) {
             if(resultCode == Activity.RESULT_OK) {
-
+                if(data != null) {
+                    currentSong = data.getSerializableExtra(CURRENT_SONG) as Song
+                }
+                updatePlayGroup()
+                updatePlayIv()
             }
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onPlayComplete(event: ServiceTrigerEvent) {
-        playBt.setImageDrawable(context.getDrawable(R.drawable.playingimage))
+        currentSongIndex = (currentSongIndex + 1) % localMusics.size
+        currentSong = localMusics[currentSongIndex] as Song
+        mPlayBinder.prepareSource(currentSong.path)
+        mPlayBinder.playOrPauseMusic()
+        updatePlayGroup()
+        updatePlayIv()
+    }
+    
+    fun updateAlbumIv() {
+        val albumArt: String = MusicUtils.getAlbumArt(currentSong.albumId, this)
+        var bitmap: Bitmap?
+        bitmap = BitmapFactory.decodeFile(albumArt)
+        val bmpDraw = BitmapDrawable(bitmap)
+        albumIv.setImageDrawable(bmpDraw)
+    }
+    
+    fun updatePlayIv() {
+        if(mPlayBinder.isPlayingState()) {
+            playBt.setImageDrawable(context.getDrawable(R.drawable.stopimage))
+        } else {
+            playBt.setImageDrawable(context.getDrawable(R.drawable.playingimage))
+        }
+    }
+
+    fun updatePlayGroup() {
+        updateAlbumIv()
+        songTv.text = currentSong.song.trim()
+        singerTv.text = currentSong.singer.trim()
     }
 
     fun playOrPauseMusic() {
-        if(mPlayBinder.isPlayingState()) {
-            playBt.setImageDrawable(context.getDrawable(R.drawable.playingimage))
-        } else {
-            playBt.setImageDrawable(context.getDrawable(R.drawable.stopimage))
-        }
         mPlayBinder.playOrPauseMusic()
+        updatePlayIv()
     }
 
     override fun onDestroy() {

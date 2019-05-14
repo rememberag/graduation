@@ -5,22 +5,64 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <RelativeLayout
+            android:id="@+id/nameGroup"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:layout_marginStart="30dp"
+    android:layout_marginTop="20dp">
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="歌名"
+                android:id="@+id/songName"
+                android:textSize="20dp"
+                android:ellipsize="end"
+                android:maxLines="1"/>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                  tools:text="歌手"
+                  android:id="@+id/singerName"
+                  android:layout_below="@+id/songName"
+                  android:textSize="15dp"
+                  android:ellipsize="end"
+                  android:maxLines="1"/>
+
+    </RelativeLayout>
+
     <ImageView
             android:id="@+id/albumIv"
             android:layout_width="match_parent"
             android:layout_height="300dp"
             android:layout_marginStart="30dp"
             android:layout_marginEnd="30dp"
-            android:layout_marginTop="100dp"/>
+            android:layout_below="@+id/nameGroup"
+            android:layout_marginTop="90dp"/>
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:id="@+id/playedTv"
+            android:textSize="12dp"
+            android:text="00:00"
+              android:layout_below="@+id/albumIv"
+              android:layout_marginTop="108dp"
+              android:layout_marginStart="20dp"/>
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+              android:id="@+id/durationTv"
+              android:textSize="12dp"
+              android:layout_below="@+id/albumIv"
+              android:layout_marginTop="108dp"
+              android:layout_alignParentEnd="true"
+              android:layout_marginEnd="20dp"
+              tools:text="05:00"/>
 
     <SeekBar
             android:id="@+id/mSeekBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/albumIv"
-            android:layout_marginTop="108dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"/>
+            android:layout_toLeftOf="@+id/durationTv"
+            android:layout_alignTop="@+id/playedTv"
+    android:layout_toRightOf="@+id/playedTv"/>
 
     <ImageView
             android:id="@+id/playBt"

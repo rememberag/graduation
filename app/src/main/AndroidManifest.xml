@@ -28,7 +28,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".MusicPlayerActivity">
+        <activity android:name=".MusicPlayerActivity"
+                  android:theme="@style/AppTheme.NoActionBar">
 
         </activity>
     </application>

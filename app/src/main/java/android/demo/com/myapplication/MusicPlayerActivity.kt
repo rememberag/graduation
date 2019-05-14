@@ -1,5 +1,8 @@
 package android.demo.com.myapplication
 
+import Main.MainActivity
+import Main.MainActivity.Companion.CURRENT_SONG
+import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -37,6 +40,7 @@ class MusicPlayerActivity: AppCompatActivity() {
         EventBus.getDefault().register(this)
         filePath = (intent.getSerializableExtra("filePath") as Song).path
         mCurrentSong = (intent.getSerializableExtra("filePath") as Song)
+        val isPlayingSong: Boolean = intent.extras.get(MainActivity.IS_PLAYING_SONG) as Boolean
         mConnection = object : ServiceConnection {
             override fun onServiceDisconnected(name: ComponentName?) {
                 TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -44,12 +48,28 @@ class MusicPlayerActivity: AppCompatActivity() {
 
             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
                 mPlayBinder = service as MusicBaseService.MusicBaseBinder
-                mPlayBinder.setDataSource(filePath)
                 mSeekBar.max = mPlayBinder.getSongDuration()
+                if(isPlayingSong) {
+                    mSeekBar.progress = mPlayBinder.getCurrentPosition()
+                    currentPosition = mPlayBinder.getCurrentPosition()
+                    if(mPlayBinder.isPlayingState()) {
+                        timer = Timer()
+                        timer.schedule(object : TimerTask() {
+                            override fun run() {
+                                mSeekBar.progress = mPlayBinder.getCurrentPosition()
+                                mSeekBar.post {  playedTv.text = MusicUtils.formatTime(mPlayBinder.getCurrentPosition()) }
+                                currentPosition = mPlayBinder.getCurrentPosition()
+                            }
+                        },0, 50)
+                    }
+                } else {
+                    mPlayBinder.prepareSource(filePath)
+                }
             }
         }
         bindService(Intent(this, MusicBaseService::class.java), mConnection, Context.BIND_AUTO_CREATE)
         init()
+        setResult(Activity.RESULT_OK, Intent().putExtra(CURRENT_SONG, mCurrentSong))
     }
 
     fun init() {
@@ -58,6 +78,13 @@ class MusicPlayerActivity: AppCompatActivity() {
     }
 
     fun initView() {
+        updateAlbumIv()
+        songName.text = mCurrentSong.song.trim()
+        singerName.text = mCurrentSong.singer.trim()
+        durationTv.text = MusicUtils.formatTime(mCurrentSong.duration)
+    }
+
+    fun updateAlbumIv() {
         val albumArt: String = MusicUtils.getAlbumArt(mCurrentSong.albumId, this)
         var bitmap: Bitmap? = null
         bitmap = BitmapFactory.decodeFile(albumArt)
@@ -85,6 +112,7 @@ class MusicPlayerActivity: AppCompatActivity() {
                 timer.schedule(object : TimerTask() {
                     override fun run() {
                         mSeekBar.progress = mPlayBinder.getCurrentPosition()
+                        mSeekBar.post {  playedTv.text = MusicUtils.formatTime(mPlayBinder.getCurrentPosition()) }
                         currentPosition = mPlayBinder.getCurrentPosition()
                         Log.d("MainActivity", "stopone")
                     }
@@ -94,22 +122,30 @@ class MusicPlayerActivity: AppCompatActivity() {
         })
     }
 
-    fun playOrPauseMusic() {
+    fun updatePlayIv() {
         if(mPlayBinder.isPlayingState()) {
+            playBt.setImageDrawable(context.getDrawable(R.drawable.stopimage))
+        } else {
+            playBt.setImageDrawable(context.getDrawable(R.drawable.playingimage))
+        }
+    }
+
+    fun playOrPauseMusic() {
+        mPlayBinder.playOrPauseMusic()
+        updatePlayIv()
+        if(!mPlayBinder.isPlayingState()) {
             timer.cancel()
             timer.purge()
-            playBt.setImageDrawable(context.getDrawable(R.drawable.playingimage))
         } else {
-            playBt.setImageDrawable(context.getDrawable(R.drawable.stopimage))
             timer = Timer()
             timer.schedule(object : TimerTask() {
                 override fun run() {
                     mSeekBar.progress = mPlayBinder.getCurrentPosition()
+                    mSeekBar.post {  playedTv.text = MusicUtils.formatTime(mPlayBinder.getCurrentPosition()) }
                     currentPosition = mPlayBinder.getCurrentPosition()
                 }
             },0, 50)
         }
-        mPlayBinder.playOrPauseMusic()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

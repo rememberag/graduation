@@ -37,7 +37,7 @@ class MusicBaseService : Service() {
 
     inner class MusicBaseBinder : Binder() {
 
-        fun setDataSource(filePath: String) {
+        fun prepareSource(filePath: String) {
             if(mPlayer != null) {
                 mPlayer!!.reset()
                 try{
@@ -105,5 +105,7 @@ class MusicBaseService : Service() {
                 }
             }
         }
+
+
     }
 }

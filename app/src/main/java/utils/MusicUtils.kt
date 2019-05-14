@@ -1,5 +1,6 @@
 package utils
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
@@ -8,6 +9,9 @@ import android.util.Log
 import data.BaseData
 import data.Song
 import java.lang.Exception
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 class MusicUtils {
 
@@ -22,8 +26,8 @@ class MusicUtils {
             if(cursor != null) {
                 while(cursor.moveToNext()) {
                     val song = Song(
-                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)),
                         cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)),
                         cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)),
                         cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)),
                         cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)),
@@ -45,8 +49,12 @@ class MusicUtils {
             return localMusics
         }
 
+        @SuppressLint("SimpleDateFormat")
         fun formatTime(duration: Int) : String {
-            return ""
+            val date = Date(duration.toLong())
+            val sdf = SimpleDateFormat("mm:ss")
+            val totalTime = sdf.format(date)
+            return totalTime
         }
 
         fun getAlbumArt(albumId: String, context: Context) : String {
