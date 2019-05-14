@@ -1,0 +1,6 @@
+package BaseMVP
+
+class BasePresenter {
+
+
+}

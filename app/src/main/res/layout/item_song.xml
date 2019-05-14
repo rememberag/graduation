@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="70dp" xmlns:tools="http://schemas.android.com/tools">
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+    android:textSize="20dp"
+    tools:text="歌曲名"
+    android:layout_marginTop="20dp"
+    android:layout_marginStart="30dp"
+    android:id="@+id/songName"/>
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+              android:textSize="20dp"
+              tools:text="时长"
+              android:layout_marginTop="20dp"
+              android:layout_toRightOf="@+id/songName"
+              android:layout_marginStart="10dp"
+              android:id="@+id/durationTv"/>
+
+</RelativeLayout>

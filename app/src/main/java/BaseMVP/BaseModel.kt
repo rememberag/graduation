@@ -1,0 +1,4 @@
+package BaseMVP
+
+class BaseModel {
+}
