@@ -1,7 +1,11 @@
 package android.demo.com.myapplication
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.support.v7.widget.RecyclerView
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +14,7 @@ import data.LocalCategoryData
 import data.Song
 import kotlinx.android.synthetic.main.item_category.view.*
 import kotlinx.android.synthetic.main.item_song.view.*
+import utils.MusicUtils
 
 class LocalTypeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(){
 
@@ -48,11 +53,26 @@ class LocalTypeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(){
     inner class SongViewHolder(var view: View) : RecyclerView.ViewHolder(view) {
 
         fun bindData(position: Int) {
-            view.songName.text = (dataList[position] as Song).song
-            view.durationTv.text = (dataList[position] as Song).duration.toString()
+            val songName = (dataList[position] as Song).song.trim()
+            if(TextUtils.isEmpty(songName)) {
+                view.songName.text = "未知"
+            } else {
+                view.songName.text = songName
+            }
+            setAlbumIv(position)
+            view.singerName.text = (dataList[position] as Song).singer.trim()
+            view.durationTv.text = MusicUtils.formatTime((dataList[position] as Song).duration)
             view.setOnClickListener{
                 songItemClickListener.onItemClick((dataList[position] as Song))
             }
+        }
+
+        fun setAlbumIv(position: Int) {
+            val albumArt: String = MusicUtils.getAlbumArt((dataList[position] as Song).albumId, view.context)
+            var bitmap: Bitmap? = null
+            bitmap = BitmapFactory.decodeFile(albumArt)
+            val bmpDraw = BitmapDrawable(bitmap)
+            view.albumIv.setImageDrawable(bmpDraw)
         }
     }
 

@@ -129,6 +129,11 @@ class MainActivity : AppCompatActivity() {
             updatePlayGroup()
             updatePlayIv()
         }
+        playGroup.setOnClickListener {
+            startActivityForResult(
+                Intent(this@MainActivity, MusicPlayerActivity::class.java).putExtra("filePath", currentSong).putExtra(IS_PLAYING_SONG, true)
+                , START_TO_PLAY_MUSIC)
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

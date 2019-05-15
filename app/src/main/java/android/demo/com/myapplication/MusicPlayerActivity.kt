@@ -52,6 +52,7 @@ class MusicPlayerActivity: AppCompatActivity() {
                 if(isPlayingSong) {
                     mSeekBar.progress = mPlayBinder.getCurrentPosition()
                     currentPosition = mPlayBinder.getCurrentPosition()
+                    updatePlayIv()
                     if(mPlayBinder.isPlayingState()) {
                         timer = Timer()
                         timer.schedule(object : TimerTask() {
