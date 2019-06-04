@@ -65,6 +65,26 @@
     android:layout_toRightOf="@+id/playedTv"/>
 
     <ImageView
+            android:id="@+id/lastSongBt"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_below="@+id/albumIv"
+            android:layout_marginTop="142dp"
+            android:src="@drawable/lastsong"
+            android:scaleType="fitCenter"
+    android:layout_toLeftOf="@+id/playBt"/>
+
+    <ImageView
+            android:id="@+id/nextSongBt"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_below="@+id/albumIv"
+            android:layout_marginTop="142dp"
+            android:src="@drawable/nextsong"
+            android:scaleType="fitCenter"
+    android:layout_toRightOf="@id/playBt"/>
+
+    <ImageView
             android:id="@+id/playBt"
             android:layout_width="60dp"
             android:layout_height="60dp"
@@ -74,5 +94,7 @@
             android:gravity="center"
             android:scaleType="fitCenter"
             android:layout_centerHorizontal="true"/>
+
+
 
 </RelativeLayout>

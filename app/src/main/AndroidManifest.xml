@@ -32,6 +32,10 @@
                   android:theme="@style/AppTheme.NoActionBar">
 
         </activity>
+        <activity android:name="PlayListActivity.PlayListActivity"
+                  android:theme="@style/AppTheme.NoActionBar">
+
+        </activity>
     </application>
 
 </manifest>

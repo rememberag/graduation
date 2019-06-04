@@ -1,7 +1,6 @@
 package android.demo.com.myapplication
 
-import Main.MainActivity
-import Main.MainActivity.Companion.CURRENT_SONG
+import Main.SettingData
 import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
@@ -15,6 +14,7 @@ import android.os.IBinder
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.SeekBar
+import data.BaseData
 import data.EventBusData.ServiceTrigerEvent
 import data.Song
 import kotlinx.android.synthetic.main.activity_play.*
@@ -26,24 +26,26 @@ import java.util.*
 
 class MusicPlayerActivity: AppCompatActivity() {
 
-    var currentPosition: Int = 0
     var timer = Timer()
     val context = this
     lateinit var filePath: String
     lateinit var mPlayBinder: MusicBaseService.MusicBaseBinder
     lateinit var mConnection: ServiceConnection
     lateinit var mCurrentSong: Song
+    lateinit var currentPlayList: MutableList<BaseData>
+    var currentPlayIndex: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_play)
         EventBus.getDefault().register(this)
-        filePath = (intent.getSerializableExtra("filePath") as Song).path
-        mCurrentSong = (intent.getSerializableExtra("filePath") as Song)
-        val isPlayingSong: Boolean = intent.extras.get(MainActivity.IS_PLAYING_SONG) as Boolean
+        filePath = (intent.getSerializableExtra(SettingData.FILE_PATH) as Song).path
+        mCurrentSong = (intent.getSerializableExtra(SettingData.FILE_PATH) as Song)
+        currentPlayList = (intent.getSerializableExtra(SettingData.CURRENT_PLAY_LIST) as MutableList<BaseData>)
+        val isPlayingSong: Boolean = intent.extras.get(SettingData.IS_PLAYING_SONG) as Boolean
         mConnection = object : ServiceConnection {
             override fun onServiceDisconnected(name: ComponentName?) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
             }
 
             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -51,7 +53,6 @@ class MusicPlayerActivity: AppCompatActivity() {
                 mSeekBar.max = mPlayBinder.getSongDuration()
                 if(isPlayingSong) {
                     mSeekBar.progress = mPlayBinder.getCurrentPosition()
-                    currentPosition = mPlayBinder.getCurrentPosition()
                     updatePlayIv()
                     if(mPlayBinder.isPlayingState()) {
                         timer = Timer()
@@ -59,18 +60,18 @@ class MusicPlayerActivity: AppCompatActivity() {
                             override fun run() {
                                 mSeekBar.progress = mPlayBinder.getCurrentPosition()
                                 mSeekBar.post {  playedTv.text = MusicUtils.formatTime(mPlayBinder.getCurrentPosition()) }
-                                currentPosition = mPlayBinder.getCurrentPosition()
                             }
                         },0, 50)
                     }
                 } else {
                     mPlayBinder.prepareSource(filePath)
+                    playOrPauseMusic()
                 }
             }
         }
         bindService(Intent(this, MusicBaseService::class.java), mConnection, Context.BIND_AUTO_CREATE)
         init()
-        setResult(Activity.RESULT_OK, Intent().putExtra(CURRENT_SONG, mCurrentSong))
+        setResult(Activity.RESULT_OK, Intent().putExtra(SettingData.CURRENT_SONG, mCurrentSong))
     }
 
     fun init() {
@@ -85,6 +86,14 @@ class MusicPlayerActivity: AppCompatActivity() {
         durationTv.text = MusicUtils.formatTime(mCurrentSong.duration)
     }
 
+    fun onCurrentSongChanged() {
+        songName.text = mCurrentSong.song.trim()
+        singerName.text = mCurrentSong.singer.trim()
+        durationTv.text = MusicUtils.formatTime(mCurrentSong.duration)
+        updateAlbumIv()
+        setResult(Activity.RESULT_OK, Intent().putExtra(SettingData.CURRENT_SONG, mCurrentSong))
+    }
+
     fun updateAlbumIv() {
         val albumArt: String = MusicUtils.getAlbumArt(mCurrentSong.albumId, this)
         var bitmap: Bitmap? = null
@@ -96,6 +105,27 @@ class MusicPlayerActivity: AppCompatActivity() {
     fun initListener() {
         playBt.setOnClickListener {
             playOrPauseMusic()
+        }
+        nextSongBt.setOnClickListener {
+            timer.cancel()
+            timer.purge()
+            currentPlayIndex = currentPlayList.indexOf(mCurrentSong)
+            currentPlayIndex = (currentPlayIndex + 1) % currentPlayList.size
+            mCurrentSong = currentPlayList[currentPlayIndex] as Song
+            mPlayBinder.prepareSource(mCurrentSong.path)
+            playOrPauseMusic()
+            onCurrentSongChanged()
+        }
+        lastSongBt.setOnClickListener {
+            timer.cancel()
+            timer.purge()
+            currentPlayIndex = currentPlayList.indexOf(mCurrentSong)
+            currentPlayIndex = (currentPlayIndex - 1 + currentPlayList.size) % currentPlayList.size
+            mCurrentSong = currentPlayList[currentPlayIndex] as Song
+            mPlayBinder.prepareSource(mCurrentSong.path)
+            mSeekBar.max = mPlayBinder.getSongDuration()
+            playOrPauseMusic()
+            onCurrentSongChanged()
         }
         mSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -114,7 +144,6 @@ class MusicPlayerActivity: AppCompatActivity() {
                     override fun run() {
                         mSeekBar.progress = mPlayBinder.getCurrentPosition()
                         mSeekBar.post {  playedTv.text = MusicUtils.formatTime(mPlayBinder.getCurrentPosition()) }
-                        currentPosition = mPlayBinder.getCurrentPosition()
                         Log.d("MainActivity", "stopone")
                     }
                 },0, 50)
@@ -143,7 +172,6 @@ class MusicPlayerActivity: AppCompatActivity() {
                 override fun run() {
                     mSeekBar.progress = mPlayBinder.getCurrentPosition()
                     mSeekBar.post {  playedTv.text = MusicUtils.formatTime(mPlayBinder.getCurrentPosition()) }
-                    currentPosition = mPlayBinder.getCurrentPosition()
                 }
             },0, 50)
         }

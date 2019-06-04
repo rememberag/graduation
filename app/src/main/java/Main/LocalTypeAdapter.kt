@@ -1,6 +1,7 @@
-package android.demo.com.myapplication
+package Main
 
 import android.annotation.SuppressLint
+import android.demo.com.myapplication.R
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
@@ -13,6 +14,7 @@ import data.BaseData
 import data.LocalCategoryData
 import data.Song
 import kotlinx.android.synthetic.main.item_category.view.*
+import kotlinx.android.synthetic.main.item_new_song_list.view.*
 import kotlinx.android.synthetic.main.item_song.view.*
 import utils.MusicUtils
 
@@ -20,16 +22,32 @@ class LocalTypeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(){
 
     lateinit var dataList: MutableList<BaseData>
     lateinit var songItemClickListener: SongItemClickListener
+    lateinit var songListItemClickListener: SongListItemClickListener
+    lateinit var createNewItemListener: CreateNewItemListener
 
     override fun getItemCount(): Int {
         return dataList.size
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, position: Int): RecyclerView.ViewHolder {
+    override fun getItemViewType(position: Int): Int {
         return if(dataList[position] is Song) {
+            R.layout.item_song
+        } else if(dataList[position].type == BaseData.NEW_SONG_LIST || dataList[position].type == BaseData.ADD_SONG_TO_LIST){
+            R.layout.item_new_song_list
+        } else {
+            R.layout.item_category
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return if(viewType == R.layout.item_song) {
             SongViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_song, parent, false))
-        }else {
-            CategoryViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_category, parent, false))
+        }else if(viewType == R.layout.item_new_song_list){
+            NewSongListViewHolder(LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_new_song_list, parent, false))
+        } else {
+            CategoryViewHolder(LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_category, parent, false))
         }
     }
 
@@ -37,7 +55,28 @@ class LocalTypeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(){
         if(dataList[position] is Song) {
             (viewHolder as SongViewHolder).bindData(position)
         } else {
-            (viewHolder as CategoryViewHolder).bindData(position)
+            if(viewHolder is NewSongListViewHolder) {
+                 viewHolder.bindData(position)
+            } else {
+                (viewHolder as CategoryViewHolder).bindData(position)
+            }
+        }
+    }
+
+    inner class NewSongListViewHolder(var view: View) : RecyclerView.ViewHolder(view) {
+
+        fun bindData(position: Int) {
+            view.newTv.setOnClickListener {
+                createNewItemListener.onClickCreateBt()
+            }
+            view.newIv.setOnClickListener {
+                createNewItemListener.onClickCreateBt()
+            }
+            if(dataList[position].type == BaseData.NEW_SONG_LIST) {
+                view.newTv.text = "新建歌单"
+            } else if(dataList[position].type == BaseData.ADD_SONG_TO_LIST) {
+                view.newTv.text = "添加歌曲"
+            }
         }
     }
 
@@ -46,7 +85,10 @@ class LocalTypeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(){
         @SuppressLint("SetTextI18n")
         fun bindData(position: Int) {
             view.singerTv.text = (dataList[position] as LocalCategoryData).name
-            view.songCount.text = (dataList[position] as LocalCategoryData).count.toString() + "首"
+            view.songCount.text = (dataList[position] as LocalCategoryData).songList.size.toString() + "首"
+            view.setOnClickListener {
+                songListItemClickListener.onItemClick(dataList[position] as LocalCategoryData, position)
+            }
         }
     }
 
@@ -78,6 +120,14 @@ class LocalTypeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(){
 
     interface SongItemClickListener {
         fun onItemClick(song: Song)
+    }
+
+    interface SongListItemClickListener {
+        fun onItemClick(data: LocalCategoryData, position: Int)
+    }
+
+    interface CreateNewItemListener {
+        fun onClickCreateBt()
     }
 
 }
